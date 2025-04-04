@@ -11,4 +11,10 @@ pub enum ContractError {
 
     #[error("Game already exists")]
     DuplicateGame {},
+
+    #[error("Game not found")]
+    GameNotFound {},
+
+    #[error("No address")]
+    NoAddress {},
 }

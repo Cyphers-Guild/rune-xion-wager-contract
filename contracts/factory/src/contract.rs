@@ -59,14 +59,34 @@ pub fn execute(
             game_id, 
             player 
         } => execute_wager(deps, env, info, game_id, player), 
+        ExecuteMsg::ResolveGame {
+            game_id
+            winner
+        } => execute_resolve_game(deps, env, info, game_id, winner),
+        ExecuteMsg::RefundDraw {game_id} => execute_refund_draw(deps, env, info, game_id),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => query_config(deps),
+        QueryMsg::Config {} => query_config(deps)?,
+        QueryMsg::GetGamePool {game_id} => query_game_pool(deps, game_id)?,
+        QueryMsg::ListGames {} => query_list_games(deps)?,
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> StdResult<Response> {
+    let res = reply.result.into_result()?;
+    let address = res.data.map(|binary| deps.api.addr_validate(binary.as_slice().unwrap()).ok_or(ContractError::NoAddress {}))?;
+    let game_id - String::from(reply.id.to_string());
+    let mut config: Config = CONFIG.load(deps.storage)?:
+
+    config.games.insert(game_id, address);
+    CONFIG.update(deps.storage, &to_json_binary(&config)?)?;
+
+    Ok(Response::default())
 }
 
 #[cfg(test)]
