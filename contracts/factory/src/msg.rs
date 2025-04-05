@@ -1,26 +1,34 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cosmwasm_std::Addr;
 
 #[cw_serde]
 pub struct InstantiateMsg {
     pub game_code_id: u64,
     pub admin: String,
     pub admin_fee_percentage: u64,
-    pub player_fee_percentage: u64,
+    pub player_win_percentage: u64,
+    pub player_draw_percentage: u64,
+}
+
+#[cw_serde]
+pub struct PlayerInfo {
+    pub name: String,
+    pub address: String,
 }
 
 #[cw_serde]
 pub enum ExecuteMsg {
     CreateGame {
         game_id: String,
-        white_player: String,
-        black_player: String,
+        white_player: PlayerInfo,
+        black_player: PlayerInfo,
         status: String,
     },
     Wager {
         game_id: String,
         player: String,
     },
-    ResolveMatch {
+    ResolveGame {
         game_id: String,
         winner: String,
     },
@@ -35,7 +43,7 @@ pub enum QueryMsg {
     #[returns(ConfigResponse)]
     Config {},
     #[returns(GetGameResponse)]
-    GetMatchPool { game_id: String },
+    GetGamePool { game_id: String },
     #[returns(ListGamesResponse)]
     ListGames {},
 }

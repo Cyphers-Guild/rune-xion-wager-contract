@@ -17,4 +17,12 @@ pub enum ContractError {
 
     #[error("No address")]
     NoAddress {},
+
+    // #[error("Error in reply: {msg}")]
+    // ReplyError { msg: String },
+
+    // #[error("Parse Error in reply: {msg}")]
+    // ReplyParseError { msg: String },
+    #[error("Data missing")]
+    DataMissingErr {},
 }
