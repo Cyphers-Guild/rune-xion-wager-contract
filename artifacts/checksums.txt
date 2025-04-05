@@ -1,0 +1,2 @@
+94664ad94bec0c006e705a235c7decba0c6bef7a67d4aa0f36b509c4b0fdbf18  factory.wasm
+1fb56fdd09998baf13734634dfeb2a0099e38b0f3a52ab6917459bb6e195ce31  wager.wasm

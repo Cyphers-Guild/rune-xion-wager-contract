@@ -20,9 +20,9 @@ pub enum ContractError {
 
     // #[error("Error in reply: {msg}")]
     // ReplyError { msg: String },
+    #[error("Parse Error in reply: {msg}")]
+    ReplyParseError { msg: String },
 
-    // #[error("Parse Error in reply: {msg}")]
-    // ReplyParseError { msg: String },
     #[error("Data missing")]
     DataMissingErr {},
 }

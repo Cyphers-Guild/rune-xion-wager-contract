@@ -1,5 +1,5 @@
 [workspace]
-members = ["contracts/factory"]
+members = ["contracts/*"]
 resolver = "2"
 
 [workspace.package]
@@ -35,6 +35,6 @@ cw-storage-plus = "2.0.0"
 cw2 = "2.0.0"
 schemars = "0.8.16"
 serde = { version = "1.0.197", default-features = false, features = ["derive"] }
-cw0 = "0.10.3"
+cw-utils = "2.0.0"
 thiserror = { version = "1.0.58" }
 wager = { path = "contracts/wager" }

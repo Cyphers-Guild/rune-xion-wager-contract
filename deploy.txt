@@ -1,0 +1,6 @@
+--- FACTORY ---
+CODE ID = 453
+CONTRACT_ADDRESS = xion182xdvwf4e98yty99w6y97evtlnawarhzn7n56hlnqy4qcgzqu5rq27gsve
+
+--- WAGER ---
+wager CODE ID = 454

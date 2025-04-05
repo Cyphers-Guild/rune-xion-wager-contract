@@ -1,12 +1,10 @@
 use cosmwasm_std::{
-    to_json_binary, CosmosMsg, DepsMut, Env, MessageInfo, ReplyOn, Response, SubMsg, WasmMsg,
+    to_json_binary, CosmosMsg, DepsMut, Env, MessageInfo, Response, SubMsg, WasmMsg,
 };
 
 use crate::error::ContractError;
 use crate::msg::PlayerInfo;
 use crate::state::{Config, CONFIG};
-
-pub fn generate_salt(len: usize)
 
 pub fn execute_create_game(
     deps: DepsMut,
@@ -27,9 +25,7 @@ pub fn execute_create_game(
         return Err(ContractError::DuplicateGame {});
     }
 
-    let salt = 
-
-    let instantiate_game = CosmosMsg::Wasm(WasmMsg::Instantiate2 {
+    let instantiate_game = CosmosMsg::Wasm(WasmMsg::Instantiate {
         admin: None,
         code_id: config.game_code_id,
         msg: to_json_binary(&wager::msg::InstantiateMsg {

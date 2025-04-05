@@ -1,11 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    Binary, Deps, DepsMut, Env, MessageInfo, MsgResponse, Reply, Response, StdError, StdResult, SubMsgResponse,
-};
+use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult};
 use cw2::set_contract_version;
 
-use cw0::parse_reply_instantiate_data;
+use cw_utils::parse_instantiate_response_data;
 
 use crate::query::{query_config, query_game_pool, query_list_games};
 use crate::state::{Config, CONFIG};
@@ -77,125 +75,31 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-// #[cfg_attr(not(feature = "library"), entry_point)]
-// pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> Result<Response, ContractError> {
-//     match msg.id {
-//         1u64 => reply_created_game_wager(deps, env, msg.result.into_result()),
-//     }
-// }
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
+    let reply_result = reply
+        .result
+        .into_result()
+        .map_err(|e| ContractError::ReplyParseError { msg: e.to_string() })?;
 
-// pub fn reply_created_game_wager(
-//     deps: DepsMut,
-//     _env: Env,
-//     reply: Result<SubMsgResponse, String>,
-// ) -> Result<Response, ContractError> {
-//     let response = reply.map_err(StdError::generic_err)?;
-//     let contract_address_str: String = match response.msg_responses.first() {
-//         Some(MsgResponse { msg_responses, .. }) => {
-//             if let Some(cosmos_msg_response) = msg_responses.first() {
-//                 // Assuming the relevant response is the first one.
-//                 // You might need more logic to find the correct response if multiple exist.
-//                 match cosmos_msg_response.type_url.as_str() {
-//                     "/cosmwasm.wasm.v1.MsgInstantiateContractResponse"
-//                     | "/cosmwasm.wasm.v1.MsgInstantiateContract2Response" => {
-//                         #[derive(Deserialize)]
-//                         struct InstantiateContractResponse {
-//                             pub contract_address: String,
-//                         }
-//                         let parsed: InstantiateContractResponse = serde_json::from_slice(
-//                             cosmos_msg_response.value.as_slice(),
-//                         )
-//                         .map_err(|e| ContractError::ReplyParseError {
-//                             msg: format!("Failed to parse instantiate response: {}", e),
-//                         })?;
-//                         parsed.contract_address
-//                     }
-//                     // Handle other potential MsgResponse types if needed
-//                     _ => {
-//                         return Err(ContractError::ReplyParseError {
-//                             msg: format!(
-//                                 "Unexpected MsgResponse type: {}",
-//                                 cosmos_msg_response.type_url
-//                             ),
-//                         });
-//                     }
-//                 }
-//             } else {
-//                 return Err(ContractError::ReplyParseError {
-//                     msg: "Empty msg_responses".to_string(),
-//                 });
-//             }
-//         }
-//         _ => {
-//             // Fallback to the deprecated data field
-//             response
-//                 .data
-//                 .ok_or_else(|| ContractError::ReplyParseError {
-//                     msg: "Deprecated reply data field is missing".to_string(),
-//                 })
-//                 .and_then(|binary| {
-//                     String::from_utf8(binary.to_vec()).map_err(|e| ContractError::ReplyParseError {
-//                         msg: format!("Deprecated reply data is not valid UTF-8: {}", e),
-//                     })
-//                 })?
-//         }
-//     };
-// }
+    let reply_data = parse_instantiate_response_data(
+        reply_result.msg_responses.first().unwrap().value.as_slice(),
+    )
+    .map_err(|e| ContractError::ReplyParseError { msg: e.to_string() })?;
 
-// #[cfg_attr(not(feature = "library"), entry_point)]
-// pub fn reply1(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-//     let reply_result = msg
-//         .result
-//         .into_result()
-//         .map_err(|e| ContractError::ReplyParseError { msg: e.to_string() })?;
+    let game_address = deps.api.addr_validate(&reply_data.contract_address)?;
+    let game_id = reply.id.to_string();
 
-//     let contract_address_str: String = match reply_result.msg_responses.first() {
-//         Some(MsgResponse { data: Some(b), .. }) => {
-//             let parsed: InstantiateReply = serde_json::from_slice(b.as_slice())
-//                 .map_err(|e| ContractError::ReplyParseError { msg: e.to_string() })?;
-//             parsed.address
-//         }
-//         _ => {
-//             // Fallback to the deprecated data field
-//             reply_result
-//                 .data
-//                 .ok_or_else(|| ContractError::ReplyParseError {
-//                     msg: "Deprecated reply data field is missing".to_string(),
-//                 })
-//                 .and_then(|binary| {
-//                     String::from_utf8(binary.to_vec()).map_err(|e| ContractError::ReplyParseError {
-//                         msg: format!("Deprecated reply data is not valid UTF-8: {}", e),
-//                     })
-//                 })?
-//         }
-//     };
-//     let reply_data = parse_reply_instantiate_data(msg)
-//         .map_err(|e| ContractError::ReplyParseError { msg: e.to_string() })?;
+    let game_id_clone = game_id.clone();
+    CONFIG.update(deps.storage, |mut cfg| -> Result<_, ContractError> {
+        cfg.games.insert(game_id_clone, game_address);
+        Ok(cfg)
+    })?;
 
-//     let game_address = deps.api.addr_validate(&reply_data.contract_address)?;
-//     let game_id = msg.id.to_string();
-
-//     CONFIG.update(deps.storage, |mut cfg| -> Result<_, ContractError> {
-//         cfg.games.insert(game_id, game_address);
-//         Ok(cfg)
-//     })?;
-
-//     Ok(Response::new()
-//         .add_attribute("game_id", game_id)
-//         .add_attribute("game_address", reply_data.contract_address))
-
-//     match msg.id {
-//         1u64 => {
-//             let res = parse_reply_instantiate_data(msg);
-
-//             let contract_address = deps.api.addr_validate(&res.contract_address)?;
-
-//             Ok(Response::new()
-//                 .add_attribute("game_id", game_id)
-//                 .add_attribute("game_address", reply_data.contract_address))
-//         }
-//     }
-// }
+    Ok(Response::new()
+        .add_attribute("game_id", &game_id)
+        .add_attribute("game_address", reply_data.contract_address))
+}
 
 #[cfg(test)]
 mod tests {}
